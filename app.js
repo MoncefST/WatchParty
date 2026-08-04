@@ -205,7 +205,26 @@ const showMatch = (video) => {
   $("[data-open-match]").addEventListener("click", () => openMatch(video));
 };
 
-const openMatch = (video) => { if (!video) return; $("#watchUrl").value = `https://youtu.be/${video.youtubeId}`; loadWatchVideo(video.youtubeId); $("#watch").scrollIntoView({ behavior: "smooth" }); };
+const playCassetteTransition = (video) => {
+  const overlay = $("#cassetteOverlay");
+  $("#cassetteType").textContent = `${video.type.toUpperCase()} / MATCH`; 
+  $("#cassetteTitle").textContent = video.title;
+  $("#cassetteMeta").textContent = `${video.meta.split("·")[0].trim()} / PLAY SIDE A`;
+  overlay.classList.remove("is-opening");
+  overlay.classList.add("is-flying");
+  window.requestAnimationFrame(() => window.requestAnimationFrame(() => overlay.classList.add("is-opening")));
+  window.setTimeout(() => overlay.classList.remove("is-flying", "is-opening"), 1450);
+};
+
+const openMatch = (video) => {
+  if (!video) return;
+  playCassetteTransition(video);
+  window.setTimeout(() => {
+    $("#watchUrl").value = `https://youtu.be/${video.youtubeId}`;
+    loadWatchVideo(video.youtubeId);
+    $("#watch").scrollIntoView({ behavior: "smooth" });
+  }, 690);
+};
 
 const openInfo = (video) => {
   $("#infoModalContent").innerHTML = `<span class="profile-micro">${video.type} · ${video.meta}</span><h2 id="infoTitle">${video.title}</h2><p class="info-copy">${video.description}</p><div class="common-tags card-info-tags">${video.tags.map((tag) => `<span class="tag tag-plain">${tag}</span>`).join("")}</div><button class="button button-lime" data-info-like="true" type="button">Garder cette carte <span>↗</span></button>`;
