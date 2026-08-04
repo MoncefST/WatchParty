@@ -25,6 +25,7 @@ const state = {
   stats: { subscriptions: 0, likes: 0, updated: "—" },
   channels: [],
   recommendations: [],
+  participantRecommendations: { host: [], guest: [] },
   recommendationSource: "",
   roomCode: getRoomFromHash() || persisted.roomCode || "",
   role: sessionStorage.getItem("watchparty-role") || "",
@@ -32,6 +33,7 @@ const state = {
   partner: null,
   decisions: { host: {}, guest: {} },
   matches: [],
+  lastOpenedMatchId: "",
   activeStep: "account",
 };
 
@@ -54,7 +56,9 @@ const send = (type, payload = {}) => { roomChannel?.postMessage({ type, ...paylo
 
 const setActiveStep = (step) => {
   state.activeStep = step;
-  $$(".flow-step").forEach((button) => button.classList.toggle("is-active", button.dataset.step === step));
+  const steps = ["account", "room", "swipe", "watch"];
+  const currentIndex = steps.indexOf(step);
+  $$(".flow-step").forEach((item) => { const index = steps.indexOf(item.dataset.step); item.classList.toggle("is-active", item.dataset.step === step); item.classList.toggle("is-done", index < currentIndex); });
   $$("[data-panel]").forEach((panel) => { const visible = panel.dataset.panel === step; panel.hidden = !visible; panel.classList.toggle("is-visible", visible); });
   if (step === "swipe") renderSwipe();
   if (step === "watch") updateWatchMeta();
@@ -88,6 +92,7 @@ const renderRoom = () => {
   $("#roomInvite").hidden = !hasRoom;
   $("#roomCode").textContent = state.roomCode || "—";
   $("#joinCode").value = state.roomCode || "";
+  $("#inviteLabel").textContent = state.role === "host" ? "CODE À PARTAGER" : "CODE DE LA PARTIE";
   $("#partnerStatus").textContent = state.partner ? `${state.partner.name.split(" ")[0]} est là` : "en attente du lien";
   $(".member-waiting").classList.toggle("is-ready", Boolean(state.partner));
   if (state.partner) { $(".member-waiting .member-avatar").textContent = initials(state.partner.name); $(".member-waiting .member-pulse").textContent = "✓"; }
@@ -100,6 +105,7 @@ const connectRoomChannel = () => {
   roomChannel.addEventListener("message", ({ data }) => {
     if (!data || data.sender === state.sessionId) return;
     if (data.type === "hello") { state.partner = data.user; renderRoom(); send("hello", { user: publicUser() }); return; }
+    if (data.type === "profile") handleRemoteProfile(data);
     if (data.type === "decision") handleRemoteDecision(data);
     if (data.type === "watch") applyRemoteWatch(data);
   });
@@ -107,6 +113,22 @@ const connectRoomChannel = () => {
 };
 
 const publicUser = () => state.user ? { name: state.user.name, picture: state.user.picture || "" } : { name: "Invité" };
+const mergeRecommendations = () => {
+  const seen = new Set();
+  state.recommendations = [...(state.participantRecommendations.host || []), ...(state.participantRecommendations.guest || [])].filter((video) => video?.id && !seen.has(video.id) && seen.add(video.id)).slice(0, 30);
+  const hasHost = state.participantRecommendations.host.length > 0;
+  const hasGuest = state.participantRecommendations.guest.length > 0;
+  $("#swipeDescription").textContent = hasHost && hasGuest ? "La pile mélange les recommandations de vos deux comptes." : "En attente de la sélection de ton amie pour compléter la pile commune.";
+  if (state.activeStep === "swipe") renderSwipe();
+};
+const handleRemoteProfile = (data) => {
+  if (!data.role) return;
+  state.participantRecommendations[data.role] = Array.isArray(data.recommendations) ? data.recommendations : [];
+  if (data.user) state.partner = data.user;
+  mergeRecommendations();
+  renderRoom();
+};
+const publishOwnProfile = () => { const ownRecommendations = state.participantRecommendations[state.role] || state.recommendations; if (state.role && ownRecommendations.length) send("profile", { role: state.role, user: publicUser(), recommendations: ownRecommendations.slice(0, 20) }); };
 const postRoomEvent = async (type, payload) => {
   if (!state.roomCode) return;
   try { await fetch(`/api/rooms/${state.roomCode}/events`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ participantId: state.sessionId, type, payload }) }); } catch (_) { /* BroadcastChannel still keeps local tabs useful if the room service is unavailable. */ }
@@ -118,7 +140,7 @@ const pollRoom = async () => {
     if (!response.ok) return;
     const data = await response.json();
     if (data.room) { const partner = state.role === "host" ? data.room.guest : data.room.host; if (partner) state.partner = partner; }
-    for (const event of data.events || []) { roomEventCursor = Math.max(roomEventCursor, event.id); if (event.participantId === state.sessionId) continue; if (event.type === "decision") handleRemoteDecision(event.payload); if (event.type === "watch") applyRemoteWatch(event.payload); }
+    for (const event of data.events || []) { roomEventCursor = Math.max(roomEventCursor, event.id); if (event.participantId === state.sessionId) continue; if (event.type === "profile") handleRemoteProfile(event.payload); if (event.type === "decision") handleRemoteDecision(event.payload); if (event.type === "watch") applyRemoteWatch(event.payload); }
     renderRoom();
   } catch (_) { /* A temporary network issue should not interrupt swiping. */ }
 };
@@ -131,8 +153,10 @@ const joinRemoteRoom = async () => {
     roomRemoteSync = true;
     roomEventCursor = 0;
     if (data.room) { const partner = state.role === "host" ? data.room.guest : data.room.host; if (partner) state.partner = partner; }
+    for (const event of data.events || []) { roomEventCursor = Math.max(roomEventCursor, event.id); if (event.participantId === state.sessionId) continue; if (event.type === "profile") handleRemoteProfile(event.payload); if (event.type === "decision") handleRemoteDecision(event.payload); if (event.type === "watch") applyRemoteWatch(event.payload); }
     clearInterval(roomPollTimer);
     roomPollTimer = setInterval(pollRoom, 900);
+    publishOwnProfile();
     renderRoom();
   } catch (_) { roomRemoteSync = false; }
 };
@@ -144,7 +168,10 @@ const openRoom = (code, role) => {
   sessionStorage.setItem("watchparty-role", role);
   state.decisions = { host: {}, guest: {} };
   state.matches = [];
+  state.lastOpenedMatchId = "";
   state.partner = null;
+  state.participantRecommendations = { host: [], guest: [] };
+  state.participantRecommendations[role] = [...state.recommendations];
   persistRoom();
   history.replaceState(null, "", `${window.location.pathname}#room=${normalized}`);
   connectRoomChannel();
@@ -155,8 +182,7 @@ const openRoom = (code, role) => {
 
 const createRoom = () => openRoom(makeCode(), "host");
 const joinRoom = () => openRoom($("#joinCode").value, "guest");
-const inviteUrl = () => `${window.location.origin}${window.location.pathname}#room=${state.roomCode}`;
-const copyInvite = async () => { if (!state.roomCode) return toast("Crée d’abord une partie."); const text = inviteUrl(); try { await navigator.clipboard.writeText(text); $("#copyFeedback").textContent = "Lien copié"; toast("Lien d’invitation copié."); } catch (_) { window.prompt("Copie ce lien", text); } setTimeout(() => { $("#copyFeedback").textContent = ""; }, 2600); };
+const copyInvite = async () => { if (!state.roomCode) return toast("Crée d’abord une partie."); const text = state.roomCode; try { await navigator.clipboard.writeText(text); $("#copyFeedback").textContent = "Code copié"; toast("Code copié."); } catch (_) { window.prompt("Copie ce code", text); } setTimeout(() => { $("#copyFeedback").textContent = ""; }, 2600); };
 
 const fetchYouTube = async (resource, params) => {
   const url = new URL(`https://www.googleapis.com/youtube/v3/${resource}`);
@@ -202,6 +228,7 @@ const loadGoogleAccount = async (accessToken) => {
     state.stats = { subscriptions: subscriptions.pageInfo?.totalResults || subscriptions.items?.length || 0, likes: likes.pageInfo?.totalResults || likes.items?.length || 0, updated: formatDate() };
     state.channels = (subscriptions.items || []).map((item) => item.snippet?.title).filter(Boolean);
     state.recommendations = await loadRecommendations(subscriptions, likes);
+    if (state.role) { state.participantRecommendations[state.role] = [...state.recommendations]; mergeRecommendations(); }
   } catch (_) {
     state.stats.updated = "profil seul";
     state.recommendations = [];
@@ -244,7 +271,7 @@ const renderSwipe = () => {
   bindGesture();
 };
 
-const renderMatch = (video) => { $("#sideMatch").hidden = false; $("#sideMatchTitle").textContent = video.title; $("#watchTitle").textContent = video.title; $("#watchMeta").textContent = `${video.channel} · match trouvé`; $("#sideMatchButton").onclick = () => openWatch(video); toast("Match trouvé ♥"); };
+const renderMatch = (video) => { if (!video) return; $("#sideMatch").hidden = false; $("#sideMatchTitle").textContent = video.title; $("#watchTitle").textContent = video.title; $("#watchMeta").textContent = `${video.channel} · match trouvé`; $("#sideMatchButton").onclick = () => openWatch(video); if (state.lastOpenedMatchId !== video.id) { state.lastOpenedMatchId = video.id; toast("Match trouvé ♥"); setTimeout(() => openWatch(video), 450); } };
 const finishDecision = (decision) => {
   const video = state.recommendations.find((item) => item.id === selectedVideoId);
   if (!video || !state.role) return toast("Crée ou rejoins une partie d’abord.");
@@ -274,7 +301,7 @@ const loadWatchVideo = (videoId, announce = true) => { if (!videoId) return toas
 const updateWatchTime = () => { if (!youtubeReady || !youtubePlayer?.getDuration) return; const current = youtubePlayer.getCurrentTime() || 0; const duration = youtubePlayer.getDuration() || 0; $("#watchTimeline").value = duration ? current / duration * 100 : 0; $("#watchTime").textContent = `${formatTime(current)} / ${formatTime(duration)}`; };
 const applyRemoteWatch = (data) => { if (!youtubeReady) return; applyingRemoteState = true; if (data.action === "load") youtubePlayer.loadVideoById(data.videoId); if (data.action === "play") { youtubePlayer.seekTo(data.time || 0, true); youtubePlayer.playVideo(); } if (data.action === "pause") { youtubePlayer.seekTo(data.time || 0, true); youtubePlayer.pauseVideo(); } if (data.action === "seek") youtubePlayer.seekTo(data.time || 0, true); setTimeout(() => { applyingRemoteState = false; }, 250); };
 
-const logout = () => { roomChannel?.close(); roomChannel = null; clearInterval(roomPollTimer); roomPollTimer = null; roomRemoteSync = false; state.user = null; state.accessToken = ""; state.recommendations = []; state.channels = []; state.roomCode = ""; state.role = ""; state.partner = null; state.decisions = { host: {}, guest: {} }; state.matches = []; localStorage.removeItem(STORAGE_KEY); sessionStorage.removeItem("watchparty-role"); history.replaceState(null, "", window.location.pathname); showWelcome(); setFeedback(""); toast("Compte déconnecté."); };
+const logout = () => { roomChannel?.close(); roomChannel = null; clearInterval(roomPollTimer); roomPollTimer = null; roomRemoteSync = false; state.user = null; state.accessToken = ""; state.recommendations = []; state.channels = []; state.roomCode = ""; state.role = ""; state.partner = null; state.decisions = { host: {}, guest: {} }; state.matches = []; state.participantRecommendations = { host: [], guest: [] }; state.lastOpenedMatchId = ""; localStorage.removeItem(STORAGE_KEY); sessionStorage.removeItem("watchparty-role"); history.replaceState(null, "", window.location.pathname); showWelcome(); setFeedback(""); toast("Compte déconnecté."); };
 
 $("#welcomeLogin").addEventListener("click", connectGoogle);
 $("#headerLogin").addEventListener("click", connectGoogle);
@@ -285,8 +312,6 @@ $("#joinRoom").addEventListener("click", joinRoom);
 $("#joinCode").addEventListener("keydown", (event) => { if (event.key === "Enter") joinRoom(); });
 $("#copyInvite").addEventListener("click", copyInvite);
 $("#roomNext").addEventListener("click", () => { if (!state.roomCode) return toast("Crée un code avant de commencer."); setActiveStep("swipe"); });
-$("#backToRoom").addEventListener("click", () => setActiveStep("room"));
-$("#backToSwipe").addEventListener("click", () => setActiveStep("swipe"));
 $("#passButton").addEventListener("click", () => finishDecision("pass"));
 $("#likeButton").addEventListener("click", () => finishDecision("like"));
 $("#sideMatchButton").addEventListener("click", () => state.matches[0] && openWatch(state.matches[0]));
@@ -296,7 +321,6 @@ $("#watchPlayButton").addEventListener("click", () => { if (!youtubeReady) retur
 $("#watchTimeline").addEventListener("input", (event) => { if (youtubeReady) $("#watchTime").textContent = `${formatTime(Number(event.currentTarget.value) / 100 * youtubePlayer.getDuration())} / ${formatTime(youtubePlayer.getDuration())}`; });
 $("#watchTimeline").addEventListener("change", (event) => { if (!youtubeReady) return; const time = Number(event.currentTarget.value) / 100 * youtubePlayer.getDuration(); youtubePlayer.seekTo(time, true); send("watch", { action: "seek", time }); });
 $("#watchMuteButton").addEventListener("click", () => { if (!youtubeReady) return; muted = !muted; muted ? youtubePlayer.mute() : youtubePlayer.unMute(); $("#watchMuteButton").textContent = muted ? "◌" : "◖"; });
-$$(".flow-step").forEach((button) => button.addEventListener("click", () => setActiveStep(button.dataset.step)));
 
 setInterval(updateWatchTime, 500);
 renderRoom();
