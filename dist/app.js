@@ -89,7 +89,10 @@ const renderAccount = () => {
 
 const renderRoom = () => {
   const hasRoom = Boolean(state.roomCode);
+  $("#roomChoices").hidden = hasRoom;
   $("#roomInvite").hidden = !hasRoom;
+  $("#roomTitle").textContent = hasRoom ? (state.role === "guest" ? "Tu es dans la partie." : "Partie prête.") : "Invite ton amie.";
+  $("#roomCopy").textContent = hasRoom ? "Partage ce code, puis commencez à swiper ensemble." : "Crée un code, envoie-le, puis swipez chacun de votre côté.";
   $("#roomCode").textContent = state.roomCode || "—";
   $("#joinCode").value = state.roomCode || "";
   $("#inviteLabel").textContent = state.role === "host" ? "CODE À PARTAGER" : "CODE DE LA PARTIE";
