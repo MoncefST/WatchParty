@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#101722" />
+    <meta name="description" content="WatchParty — comparez vos goûts, swipez vos découvertes et trouvez la vidéo qui mérite votre soirée." />
+    <title>WatchParty — Deux goûts. Un bon film.</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-noise" aria-hidden="true"></div>
+    <header class="top-nav">
+      <a class="wordmark" href="#top" aria-label="WatchParty, accueil">
+        <span class="wordmark-icon" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Watch<span>Party</span></span>
+      </a>
+      <nav class="main-nav" aria-label="Navigation principale">
+        <a href="#radar">Le radar</a>
+        <a href="#swipe">Le swipe</a>
+        <a href="#watch">Le watchroom</a>
+      </nav>
+      <div class="nav-account">
+        <span class="nav-account-label" id="navAccountLabel">Mode aperçu</span>
+        <button class="nav-account-button" id="navGoogleButton" type="button"><span class="google-symbol">G</span><span>Connexion Google</span></button>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero-section">
+        <div class="hero-grid-lines" aria-hidden="true"></div>
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="eyebrow-dot"></span> WATCHPARTY / PRIVATE BETA</div>
+          <h1>Deux goûts.<br /><em>Un bon film.</em></h1>
+          <p class="hero-lede">Connectez vos univers YouTube, comparez ce qui vous ressemble et swipez jusqu’à trouver la vidéo qui mérite vraiment votre soirée.</p>
+          <div class="hero-actions">
+            <button class="button button-lime" id="heroGoogleButton" type="button">Se connecter avec Google <span>↗</span></button>
+            <a class="text-button" href="#swipe"><span class="text-button-icon">▶</span> Voir comment ça marche</a>
+          </div>
+          <div class="hero-proof">
+            <div class="avatar-stack" aria-hidden="true"><span class="avatar avatar-moncef">M</span><span class="avatar avatar-lea">L</span><span class="avatar avatar-plus">+</span></div>
+            <span>2 personnes · 1 décision · 0 débat interminable</span>
+          </div>
+        </div>
+
+        <div class="hero-illustration" aria-label="Une pile de jaquettes de films et un radar de goûts">
+          <div class="orbit orbit-large" aria-hidden="true"></div>
+          <div class="orbit orbit-small" aria-hidden="true"></div>
+          <div class="hero-spark spark-one" aria-hidden="true">✳</div>
+          <div class="hero-spark spark-two" aria-hidden="true">+</div>
+          <div class="hero-sticker sticker-signal"><span class="signal-bars"><i></i><i></i><i></i><i></i></span><strong>78%</strong><small>de terrain commun</small></div>
+          <div class="hero-sticker sticker-maybe"><span>▱</span><div><strong>maybe tonight</strong><small>3 cartes en attente</small></div></div>
+          <div class="poster poster-back poster-orange" aria-hidden="true"><span class="poster-label">SHORT</span><strong>SUMMER<br /><em>NOON</em></strong><small>02:14:08</small></div>
+          <div class="poster poster-side poster-blue" aria-hidden="true"><span class="poster-label">A DOC</span><strong>THE<br /><em>DEEP</em></strong><small>FIELD NOTES</small></div>
+          <div class="poster poster-front poster-lime">
+            <div class="poster-meta"><span>WP / 0017</span><span>▶ 2024</span></div>
+            <div class="poster-illustration poster-illustration-city"><span class="poster-moon"></span><span class="poster-hill hill-one"></span><span class="poster-hill hill-two"></span><span class="poster-window window-one"></span><span class="poster-window window-two"></span><span class="poster-window window-three"></span><span class="poster-line"></span></div>
+            <div class="poster-title"><span>AN EVENING</span><strong>IN THE<br /><em>CITY</em></strong></div>
+            <div class="poster-footer"><span>short film</span><span>04:32</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="intro-strip"><span class="strip-label">THE ALGORITHM IS NOT THE BOSS</span><span>Vous choisissez. Vos goûts parlent. WatchParty fait le tri.</span><span class="strip-mark">↘</span></section>
+
+      <section class="radar-section content-section" id="radar">
+        <div class="section-heading">
+          <div><div class="eyebrow eyebrow-dark"><span class="eyebrow-dot"></span> 01 / LE RADAR</div><h2>Vos goûts, en<br /><em>version lisible.</em></h2></div>
+          <p>On ne vous colle pas une étiquette. On regarde ce que vous aimez vraiment — et ce qui se croise.</p>
+        </div>
+
+        <div class="radar-grid">
+          <article class="panel-card profile-card">
+            <div class="panel-kicker"><span>PROFIL ACTIF</span><span class="live-dot">● en ligne</span></div>
+            <div class="profile-switcher" role="tablist" aria-label="Choisir un profil">
+              <button class="profile-tab is-active" data-profile="me" type="button" role="tab">Moi <span class="profile-tab-avatar avatar-moncef">M</span></button>
+              <button class="profile-tab" data-profile="lea" type="button" role="tab">Léa <span class="profile-tab-avatar avatar-lea">L</span></button>
+            </div>
+            <div class="profile-main">
+              <div class="profile-avatar-large avatar-moncef" id="profileAvatar">M</div>
+              <div><span class="profile-micro" id="profileState">APERÇU DE PROFIL</span><h3 id="profileName">Moi</h3><p id="profileEmail">Connectez Google pour analyser vos goûts.</p></div>
+            </div>
+            <div class="taste-bars" aria-label="Répartition des goûts">
+              <div class="taste-row"><div><span>Cinéma indé</span><strong data-interest-value="cinema">82%</strong></div><div class="taste-track"><i data-interest-bar="cinema"></i></div></div>
+              <div class="taste-row"><div><span>Documentaires</span><strong data-interest-value="doc">64%</strong></div><div class="taste-track"><i data-interest-bar="doc"></i></div></div>
+              <div class="taste-row"><div><span>Animation</span><strong data-interest-value="animation">48%</strong></div><div class="taste-track"><i data-interest-bar="animation"></i></div></div>
+              <div class="taste-row"><div><span>Étrange & drôle</span><strong data-interest-value="weird">71%</strong></div><div class="taste-track"><i data-interest-bar="weird"></i></div></div>
+            </div>
+            <button class="button button-outline full-width" data-login-button="true" type="button"><span class="google-symbol">G</span><span id="profileLoginLabel">Connecter ce profil avec Google</span></button>
+          </article>
+
+          <article class="panel-card common-card">
+            <div class="panel-kicker"><span>TERRAIN COMMUN</span><span class="panel-arrow">↗</span></div>
+            <div class="common-score"><div class="score-ring"><span id="commonScore">78</span><small>%</small></div><div><span class="profile-micro">MATCH GLOBAL</span><h3>Ça peut<br /><em>marcher.</em></h3></div></div>
+            <div class="common-tags"><span class="tag tag-lime">cinéma d’auteur</span><span class="tag tag-blue">sons de pluie</span><span class="tag tag-coral">humour sec</span><span class="tag tag-plain">+ 4 signaux</span></div>
+            <div class="common-foot"><div class="mini-profile-pair"><span class="avatar avatar-moncef">M</span><span class="avatar avatar-lea">L</span></div><span>calculé sur vos découvertes</span></div>
+          </article>
+
+          <article class="panel-card recommendation-card">
+            <div class="panel-kicker"><span>RECOMMANDATIONS CROISÉES</span><button class="panel-link" id="refreshRecommendations" type="button">nouveau mix ↻</button></div>
+            <div class="recommendation-grid" id="recommendationGrid"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="swipe-section content-section" id="swipe">
+        <div class="section-heading swipe-heading">
+          <div><div class="eyebrow eyebrow-dark"><span class="eyebrow-dot"></span> 02 / LE SWIPE</div><h2>On élimine le bruit.<br /><em>On garde le bon.</em></h2></div>
+          <div class="swipe-heading-right"><p>Chacun swipe de son côté. Quand vos deux pouces disent oui, la carte devient un rendez-vous.</p><div class="profile-mode"><button class="mode-button is-active" data-profile="me" type="button"><span class="avatar avatar-moncef">M</span> Moi</button><button class="mode-button" data-profile="lea" type="button"><span class="avatar avatar-lea">L</span> Léa</button></div></div>
+        </div>
+
+        <div class="swipe-layout">
+          <div class="swipe-side-note"><span class="side-note-number">A</span><strong>Votre sélection</strong><p>Un geste simple pour dire ce qui vous intrigue.</p><span class="side-note-line"></span><div class="gesture-key"><span class="key key-no">←</span><span>passer</span></div><div class="gesture-key"><span class="key key-yes">→</span><span>garder</span></div></div>
+
+          <div class="swipe-workbench">
+            <div class="swipe-deck" id="swipeDeck" aria-live="polite">
+              <div class="swipe-card swipe-card-under card-blue" aria-hidden="true"></div>
+              <div class="swipe-card swipe-card-under card-orange" aria-hidden="true"></div>
+              <article class="swipe-card swipe-card-active" id="activeSwipeCard" tabindex="0"></article>
+              <div class="swipe-stamp stamp-no" id="stampNo">PASS</div><div class="swipe-stamp stamp-yes" id="stampYes">KEEP</div>
+            </div>
+            <div class="swipe-actions"><button class="round-action action-no" id="passButton" type="button" aria-label="Passer cette vidéo">×</button><button class="round-action action-info" id="infoButton" type="button" aria-label="Voir les détails">i</button><button class="round-action action-yes" id="likeButton" type="button" aria-label="Garder cette vidéo">↗</button></div>
+            <div class="swipe-status"><span class="status-pulse"></span><span id="swipeStatus">Swipez en tant que Moi</span><span class="status-count" id="swipeCount">1 / 7</span></div>
+          </div>
+
+          <aside class="match-panel">
+            <div class="match-panel-heading"><div><span class="panel-kicker">VOS MATCHS</span><h3>À regarder<br /><em>ensemble.</em></h3></div><span class="match-number" id="matchCount">0</span></div>
+            <div class="match-list" id="matchList"><div class="empty-match"><span>◎</span><p>Les cartes que vous aimez tous les deux apparaîtront ici.</p></div></div>
+            <div class="match-how"><span class="side-note-number">01</span><p>Quand le match tombe, vous lancez directement la vidéo dans le Watchroom.</p></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="watch-section content-section" id="watch">
+        <div class="section-heading watch-heading"><div><div class="eyebrow eyebrow-dark"><span class="eyebrow-dot"></span> 03 / LE WATCHROOM</div><h2>Pas de “tu veux<br /><em>regarder quoi ?”</em></h2></div><p>Quand la carte matche, le canapé est prêt. Collez aussi n’importe quel lien YouTube pour démarrer.</p></div>
+        <div class="watch-layout">
+          <div class="watch-player panel-card-dark">
+            <div class="watch-topbar"><div><span class="live-dot"></span><strong>WATCHROOM / AWAITING A MATCH</strong></div><span id="watchSyncLabel">● local preview</span></div>
+            <div class="watch-video" id="youtubePlayer"><div class="watch-placeholder"><span class="placeholder-play">▶</span><strong>Votre prochain match sera projeté ici.</strong><span>Deux goûts · un lecteur · même timing</span></div></div>
+            <div class="watch-controls"><button id="watchPlayButton" class="watch-control" type="button" aria-label="Lire">▶</button><input id="watchTimeline" type="range" min="0" max="100" value="0" aria-label="Position de la vidéo" /><span id="watchTime">00:00 / 00:00</span><button id="watchMuteButton" class="watch-control watch-control-muted" type="button" aria-label="Couper le son">◖</button></div>
+            <div class="watch-url-row"><span>↗</span><input id="watchUrl" type="url" value="https://youtu.be/M7lc1UVf-VE" aria-label="Lien YouTube" /><button id="loadWatchButton" type="button">Charger la vidéo <span>→</span></button></div>
+          </div>
+          <aside class="watch-side panel-card">
+            <div class="panel-kicker"><span>PROCHAINS MATCHS</span><span class="panel-arrow">↗</span></div>
+            <div id="watchMatchPreview" class="watch-match-preview"><div class="preview-poster poster-orange"><span>SHORT<br /><em>SUMMER</em></span></div><div><span class="profile-micro">EXEMPLE DE CARTE</span><h3>Un film à trouver</h3><p>Swipez tous les deux pour remplir cette étagère.</p></div></div>
+            <div class="watch-side-rule"></div><div class="watch-side-tip"><span class="tip-icon">⌁</span><div><strong>Le bon rythme</strong><p>Play, pause et avance restent alignés dans un même salon.</p></div></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="closing-section"><div class="closing-orbit" aria-hidden="true"></div><div><div class="eyebrow"><span class="eyebrow-dot"></span> NO MORE SCROLLING</div><h2>Votre prochaine<br /><em>soirée est une carte.</em></h2></div><button class="button button-lime" id="closingLoginButton" type="button">Commencer avec Google <span>↗</span></button></section>
+    </main>
+
+    <footer class="site-footer"><a class="wordmark" href="#top"><span class="wordmark-icon" aria-hidden="true"><i></i><i></i><i></i></span><span>Watch<span>Party</span></span></a><span>Vos goûts, vos choix, votre soirée.</span><span>Built for the “on regarde quoi ?” moment.</span></footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <div class="modal-layer" id="authModal" hidden>
+      <div class="modal-card auth-modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+        <button class="modal-close" id="closeAuthModal" type="button" aria-label="Fermer">×</button>
+        <span class="modal-eyebrow">WATCHPARTY / GOOGLE</span><h2 id="authTitle">Qui est en train<br /><em>de choisir ?</em></h2>
+        <p class="modal-copy">Connectez un profil Google pour analyser les abonnements et vidéos aimées qui servent à construire votre radar.</p>
+        <div class="auth-target"><span class="avatar avatar-moncef" id="authTargetAvatar">M</span><div><span class="profile-micro">PROFIL CIBLE</span><strong id="authTargetName">Moi</strong></div><span class="auth-target-arrow">↗</span></div>
+        <button class="button button-lime full-width" id="modalGoogleButton" type="button"><span class="google-symbol">G</span> Continuer avec Google</button>
+        <button class="button button-ghost full-width" id="demoLoginButton" type="button">Voir l’aperçu avec des données démo</button>
+        <p class="auth-feedback" id="authFeedback"></p>
+      </div>
+    </div>
+
+    <div class="modal-layer" id="infoModal" hidden>
+      <div class="modal-card info-modal" role="dialog" aria-modal="true" aria-labelledby="infoTitle"><button class="modal-close" id="closeInfoModal" type="button" aria-label="Fermer">×</button><span class="modal-eyebrow">LA CARTE DU MOMENT</span><div id="infoModalContent"></div></div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
