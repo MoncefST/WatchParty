@@ -1,21 +1,20 @@
 # WatchParty
 
-WatchParty aide deux personnes à trouver une vidéo qui leur plaît à toutes les deux : connexion Google, radar de goûts, recommandations croisées, swipes individuels et match dans un Watchroom YouTube.
+WatchParty est un parcours simple pour deux personnes : connexion Google, stats YouTube, code de partie, swipe, match et lecture YouTube synchronisée.
 
-## Lancer
+## Lancer en local
 
-Ouvrir `index.html` dans un navigateur récent. Le mode aperçu est utilisable sans configuration. Les décisions de swipe et les commandes du lecteur peuvent se synchroniser entre deux onglets du même navigateur via `BroadcastChannel`.
+Ouvrir `index.html` dans un navigateur récent pour vérifier l’interface. Pour tester les appels de room, utiliser un serveur HTTP local afin que les fichiers `config.js` et les requêtes `/api` soient servis correctement.
 
-## Activer Google + analyse YouTube
+## Activer Google + YouTube
 
-1. Dans Google Cloud Console, créer un projet et activer YouTube Data API v3.
-2. Créer un identifiant OAuth 2.0 de type “Application Web”. Ajouter l’URL du site à ses origines JavaScript autorisées.
-3. Copier `config.example.js` vers `config.js` et renseigner `googleClientId`.
-4. Ajouter le scope `https://www.googleapis.com/auth/youtube.readonly` dans l’écran de consentement OAuth.
-5. Ajouter une clé YouTube API restreinte au domaine dans `youtubeApiKey` si les appels publics doivent être utilisés.
+1. Activer YouTube Data API v3 dans Google Cloud.
+2. Créer un OAuth Client ID de type “Application Web” et ajouter l’origine du site dans les origines JavaScript autorisées.
+3. Renseigner `googleClientId` dans `config.js` à partir de `config.example.js`.
+4. Déclarer le scope `https://www.googleapis.com/auth/youtube.readonly` dans Google Auth Platform.
 
-Le site utilise Google Identity Services et lit uniquement le profil, les abonnements et les vidéos aimées après consentement. YouTube ne fournit pas un endpoint officiel “recommendations” utilisable directement par cette interface : WatchParty construit donc le radar et le mix à partir des signaux disponibles.
+WatchParty lit le profil, les abonnements et les vidéos aimées après consentement. L’API YouTube ne fournit pas le feed d’accueil personnel directement : les cartes sont générées à partir des signaux disponibles, sans données inventées.
 
-## Passage en production
+## Rooms
 
-Pour que deux personnes sur deux appareils différents partagent réellement leurs swipes et le même lecteur, remplacer le `BroadcastChannel` de `app.js` par un canal temps réel (WebSocket, Supabase Realtime ou Firebase) et conserver les tokens OAuth côté serveur.
+Le code de partie est partagé par URL. En production, les rooms utilisent le binding D1 déclaré dans `.openai/hosting.json` : les présences, décisions et commandes du lecteur passent par `/api/rooms/:code`.
