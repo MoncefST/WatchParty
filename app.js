@@ -36,6 +36,9 @@ const state = {
 };
 
 let roomChannel = null;
+let roomPollTimer = null;
+let roomRemoteSync = false;
+let roomEventCursor = 0;
 let googleTokenClient = null;
 let youtubePlayer = null;
 let youtubeReady = false;
@@ -47,7 +50,7 @@ let selectedVideoId = null;
 const toast = (message) => { const node = $("#toast"); node.textContent = message; node.classList.add("visible"); clearTimeout(toastTimer); toastTimer = setTimeout(() => node.classList.remove("visible"), 2800); };
 const setFeedback = (message) => { $("#welcomeFeedback").textContent = message; };
 const persistRoom = () => localStorage.setItem(STORAGE_KEY, JSON.stringify({ roomCode: state.roomCode }));
-const send = (type, payload = {}) => roomChannel?.postMessage({ type, ...payload, sender: state.sessionId, sentAt: Date.now() });
+const send = (type, payload = {}) => { roomChannel?.postMessage({ type, ...payload, sender: state.sessionId, sentAt: Date.now() }); if (roomRemoteSync && type !== "hello") void postRoomEvent(type, payload); };
 
 const setActiveStep = (step) => {
   state.activeStep = step;
@@ -104,6 +107,35 @@ const connectRoomChannel = () => {
 };
 
 const publicUser = () => state.user ? { name: state.user.name, picture: state.user.picture || "" } : { name: "Invité" };
+const postRoomEvent = async (type, payload) => {
+  if (!state.roomCode) return;
+  try { await fetch(`/api/rooms/${state.roomCode}/events`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ participantId: state.sessionId, type, payload }) }); } catch (_) { /* BroadcastChannel still keeps local tabs useful if the room service is unavailable. */ }
+};
+const pollRoom = async () => {
+  if (!roomRemoteSync || !state.roomCode) return;
+  try {
+    const response = await fetch(`/api/rooms/${state.roomCode}/state?after=${roomEventCursor}`);
+    if (!response.ok) return;
+    const data = await response.json();
+    if (data.room) { const partner = state.role === "host" ? data.room.guest : data.room.host; if (partner) state.partner = partner; }
+    for (const event of data.events || []) { roomEventCursor = Math.max(roomEventCursor, event.id); if (event.participantId === state.sessionId) continue; if (event.type === "decision") handleRemoteDecision(event.payload); if (event.type === "watch") applyRemoteWatch(event.payload); }
+    renderRoom();
+  } catch (_) { /* A temporary network issue should not interrupt swiping. */ }
+};
+const joinRemoteRoom = async () => {
+  if (!state.roomCode || !state.user) return;
+  try {
+    const response = await fetch(`/api/rooms/${state.roomCode}/join`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ role: state.role, user: publicUser() }) });
+    if (!response.ok) return;
+    const data = await response.json();
+    roomRemoteSync = true;
+    roomEventCursor = 0;
+    if (data.room) { const partner = state.role === "host" ? data.room.guest : data.room.host; if (partner) state.partner = partner; }
+    clearInterval(roomPollTimer);
+    roomPollTimer = setInterval(pollRoom, 900);
+    renderRoom();
+  } catch (_) { roomRemoteSync = false; }
+};
 const openRoom = (code, role) => {
   const normalized = code.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
   if (normalized.length < 4) return toast("Le code doit contenir au moins 4 caractères.");
@@ -112,9 +144,11 @@ const openRoom = (code, role) => {
   sessionStorage.setItem("watchparty-role", role);
   state.decisions = { host: {}, guest: {} };
   state.matches = [];
+  state.partner = null;
   persistRoom();
   history.replaceState(null, "", `${window.location.pathname}#room=${normalized}`);
   connectRoomChannel();
+  void joinRemoteRoom();
   renderRoom();
   toast(role === "host" ? "Partie créée. Envoie le code à ton amie." : "Tu as rejoint la partie.");
 };
@@ -240,7 +274,7 @@ const loadWatchVideo = (videoId, announce = true) => { if (!videoId) return toas
 const updateWatchTime = () => { if (!youtubeReady || !youtubePlayer?.getDuration) return; const current = youtubePlayer.getCurrentTime() || 0; const duration = youtubePlayer.getDuration() || 0; $("#watchTimeline").value = duration ? current / duration * 100 : 0; $("#watchTime").textContent = `${formatTime(current)} / ${formatTime(duration)}`; };
 const applyRemoteWatch = (data) => { if (!youtubeReady) return; applyingRemoteState = true; if (data.action === "load") youtubePlayer.loadVideoById(data.videoId); if (data.action === "play") { youtubePlayer.seekTo(data.time || 0, true); youtubePlayer.playVideo(); } if (data.action === "pause") { youtubePlayer.seekTo(data.time || 0, true); youtubePlayer.pauseVideo(); } if (data.action === "seek") youtubePlayer.seekTo(data.time || 0, true); setTimeout(() => { applyingRemoteState = false; }, 250); };
 
-const logout = () => { roomChannel?.close(); roomChannel = null; state.user = null; state.accessToken = ""; state.recommendations = []; state.channels = []; state.roomCode = ""; state.role = ""; state.partner = null; state.decisions = { host: {}, guest: {} }; state.matches = []; localStorage.removeItem(STORAGE_KEY); history.replaceState(null, "", window.location.pathname); showWelcome(); setFeedback(""); toast("Compte déconnecté."); };
+const logout = () => { roomChannel?.close(); roomChannel = null; clearInterval(roomPollTimer); roomPollTimer = null; roomRemoteSync = false; state.user = null; state.accessToken = ""; state.recommendations = []; state.channels = []; state.roomCode = ""; state.role = ""; state.partner = null; state.decisions = { host: {}, guest: {} }; state.matches = []; localStorage.removeItem(STORAGE_KEY); sessionStorage.removeItem("watchparty-role"); history.replaceState(null, "", window.location.pathname); showWelcome(); setFeedback(""); toast("Compte déconnecté."); };
 
 $("#welcomeLogin").addEventListener("click", connectGoogle);
 $("#headerLogin").addEventListener("click", connectGoogle);
