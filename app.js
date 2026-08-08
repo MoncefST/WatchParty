@@ -5,6 +5,7 @@ const $$ = (selector, parent = document) => [...parent.querySelectorAll(selector
 const config = window.WATCHPARTY_CONFIG || {};
 const GOOGLE_CLIENT_ID = config.googleClientId || "";
 const YOUTUBE_API_KEY = config.youtubeApiKey || "";
+const ROOM_API_BASE = String(config.roomApiBaseUrl || "").replace(/\/+$/, "");
 const GOOGLE_SCOPE = "openid profile email https://www.googleapis.com/auth/youtube.readonly";
 const STORAGE_KEY = "watchparty-simple-state";
 
@@ -116,6 +117,7 @@ const connectRoomChannel = () => {
 };
 
 const publicUser = () => state.user ? { name: state.user.name, picture: state.user.picture || "" } : { name: "Invité" };
+const roomApi = (path) => `${ROOM_API_BASE}${path}`;
 const mergeRecommendations = () => {
   const seen = new Set();
   state.recommendations = [...(state.participantRecommendations.host || []), ...(state.participantRecommendations.guest || [])].filter((video) => video?.id && !seen.has(video.id) && seen.add(video.id)).slice(0, 30);
@@ -134,12 +136,12 @@ const handleRemoteProfile = (data) => {
 const publishOwnProfile = () => { const ownRecommendations = state.participantRecommendations[state.role] || state.recommendations; if (state.role && ownRecommendations.length) send("profile", { role: state.role, user: publicUser(), recommendations: ownRecommendations.slice(0, 20) }); };
 const postRoomEvent = async (type, payload) => {
   if (!state.roomCode) return;
-  try { await fetch(`/api/rooms/${state.roomCode}/events`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ participantId: state.sessionId, type, payload }) }); } catch (_) { /* BroadcastChannel still keeps local tabs useful if the room service is unavailable. */ }
+  try { await fetch(roomApi(`/api/rooms/${state.roomCode}/events`), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ participantId: state.sessionId, type, payload }) }); } catch (_) { /* BroadcastChannel still keeps local tabs useful if the room service is unavailable. */ }
 };
 const pollRoom = async () => {
   if (!roomRemoteSync || !state.roomCode) return;
   try {
-    const response = await fetch(`/api/rooms/${state.roomCode}/state?after=${roomEventCursor}`);
+    const response = await fetch(roomApi(`/api/rooms/${state.roomCode}/state?after=${roomEventCursor}`));
     if (!response.ok) return;
     const data = await response.json();
     if (data.room) { const partner = state.role === "host" ? data.room.guest : data.room.host; if (partner) state.partner = partner; }
@@ -150,7 +152,7 @@ const pollRoom = async () => {
 const joinRemoteRoom = async () => {
   if (!state.roomCode || !state.user) return;
   try {
-    const response = await fetch(`/api/rooms/${state.roomCode}/join`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ role: state.role, user: publicUser() }) });
+    const response = await fetch(roomApi(`/api/rooms/${state.roomCode}/join`), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ role: state.role, user: publicUser() }) });
     if (!response.ok) return;
     const data = await response.json();
     roomRemoteSync = true;

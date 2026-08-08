@@ -123,7 +123,16 @@ Le dépôt contient déjà la sortie déployable dans `dist/` : les fichiers sta
 
 Netlify, Vercel, Cloudflare Pages ou GitHub Pages peuvent servir l’interface sans commande de build. Configure la racine du dépôt comme dossier publié et utilise HTTPS.
 
-Un hébergement statique seul permet le parcours et le mode local, mais pas la synchronisation entre deux appareils. Pour cette dernière, garde le worker de rooms et la base D1 sur le même domaine ou configure un proxy vers ton backend.
+### GitHub Pages avec GitHub Actions
+
+Le workflow [`pages.yml`](./.github/workflows/pages.yml) publie automatiquement la racine du dépôt à chaque push sur `main`.
+
+1. Dans **Settings → Pages**, choisis **GitHub Actions** comme source de build et déploiement.
+2. Pousse un commit sur `main`, ou lance le workflow manuellement depuis l’onglet **Actions**.
+3. Le site sera disponible à l’adresse `https://moncefst.github.io/WatchParty/`.
+4. Ajoute `https://moncefst.github.io` dans les origines JavaScript autorisées du client OAuth Google.
+
+GitHub Pages ne peut servir que des fichiers statiques. Pour conserver la synchronisation entre deux appareils, `config.js` pointe vers l’API de rooms HTTPS déjà déployée grâce à `roomApiBaseUrl`. Si tu changes de backend, remplace cette valeur par son URL publique et vérifie que le CORS autorise GitHub Pages.
 
 ## Configuration Google Cloud
 

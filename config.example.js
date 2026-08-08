@@ -4,4 +4,6 @@ window.WATCHPARTY_CONFIG = {
   googleClientId: "VOTRE_CLIENT_ID.apps.googleusercontent.com",
   // Facultatif pour les appels YouTube publics ; restreignez cette clé au domaine du site.
   youtubeApiKey: "VOTRE_CLE_YOUTUBE_API",
+  // Pour GitHub Pages, indiquez l’URL HTTPS de votre API de rooms.
+  roomApiBaseUrl: "",
 };
